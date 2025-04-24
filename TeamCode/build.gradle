@@ -14,7 +14,17 @@
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
-
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://repo.dairy.foundation/snapshots"
+        }
+    }
+    dependencies {
+        classpath "dev.frozenmilk.sinister.sloth:Load:0.0.0"
+    }
+}
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
 
@@ -22,11 +32,13 @@ android {
         jniLibs.useLegacyPackaging true
     }
 }
+apply plugin: 'dev.frozenmilk.sinister.sloth.Load'
 
 repositories {
     maven {
         url = 'https://maven.brott.dev/'
     }
+    mavenCentral()
 }
 
 dependencies {
@@ -36,4 +48,5 @@ dependencies {
     implementation "com.acmerobotics.roadrunner:core:1.0.1"
     implementation "com.acmerobotics.roadrunner:actions:1.0.1"
     implementation "com.acmerobotics.dashboard:dashboard:0.4.16"
+    implementation 'org.ftclib.ftclib:core:2.1.1' // core
 }

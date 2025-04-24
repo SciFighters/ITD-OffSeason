@@ -1,0 +1,65 @@
+
+### Driver Controller:
+1. Manual Intake State:
+   - Joystick X, Y, R: Mecanum movement.
+
+2. Auto Sub Intake / Auto Chamber / Auto HP Intake State:
+   - No input (nothing happens).
+
+3. None / Chamber / Basket States:
+   - Joystick X, Y, R: Mecanum movement.
+   - Right Trigger: Boost.
+
+---
+
+### System Controller:
+
+1. None State:
+   - Left Joystick Y: Manual lift movement.
+   - Left Bumper: Lift home.
+   - Right Bumper: No action.
+   - X: Auto Intake starts → change to intake state.
+   - B (hold): Only open slides.
+   - B (release): Start intake → Change to intake state.
+   - A: End transfer → Change to chamber state → Lift to chamber. Q
+   - Y: End transfer → Change to basket state → Lift to basket. Q
+   - Back: Open/close mover gogo.
+   - D-Pad Left: HP Intake.
+
+2. Manual Intake State:
+   - Right Joystick X: Mecanum robot-oriented X.
+   - Left Joystick Y: Intake slides move (with a minimum slide position based on claw angle).
+   - B: Restart intake.
+   - X: Transfer → 1 second delay, then change to None state.
+   - D-Pad Up: Normal claw orientation sample intake.
+   - D-Pad Down: 180° from normal orientation sample intake.
+   - D-Pad Right/Left: Sideways orientation sample intake.
+   - Left Bumper: Lift home (does not change state).
+   - Back: Open/close mover gogo.
+
+3. Basket State:
+   - Left Joystick Y: Manual lift movement.
+   - Right Bumper: Release.
+   - Left Bumper: Lift home → Change to None state.
+   - A: Change to chamber state → Lift to chamber.
+   - Y: Lift to basket.
+   - Back: Open/close mover gogo.
+
+4. Chamber State:
+   - Left Joystick Y: Manual lift movement.
+   - Right Bumper: Chamber release → Reset position (if needed) → Change to None state.
+   - D-Pad Down: Chamber discharge ends → Change to auto HP intake state → Auto HP intake. Q
+   - Left Bumper: Lift home → None state.
+   - A: Lift to chamber.
+   - Y: Change to basket state → Lift to basket.
+   - Back: Open/close mover gogo.
+
+5. Auto HP Intake State:
+   - D-Pad Up: Auto HP intake ends → Change to auto chamber discharge state → Auto chamber discharge.
+   - Start: None State.
+
+6. Auto Chamber after HP State:
+    - D-Pad Down: Chamber discharge ends → Change to auto HP intake state → Auto HP intake. Q
+    - Start: None State.
+
+7. Auto Sub Intake State:

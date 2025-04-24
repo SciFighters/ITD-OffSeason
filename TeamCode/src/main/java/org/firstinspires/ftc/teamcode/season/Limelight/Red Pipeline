@@ -1,0 +1,108 @@
+import cv2
+import numpy as np
+
+def drawDecorations(image, angle, box, center, principal_axis_end):
+    """ Draw text, rectangle corners, and principal axis line """
+    # Display angle on the image
+    cv2.putText(image, f'Angle: {angle:.2f}', (10, 230),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+
+    # Draw rectangle corners
+    for corner in box:
+        cv2.circle(image, tuple(corner), 5, (0, 0, 255), -1)  # Red corners
+
+    # Draw principal axis (longest side direction)
+    cv2.line(image, center, principal_axis_end, (255, 0, 0), 2)  # Blue principal axis line
+
+# runPipeline() is called every frame by Limelight's backend.
+def runPipeline(image, llrobot):
+    # Convert image to HSV
+    img_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Apply thresholding to detect specific color
+    img_threshold = cv2.inRange(img_hsv, (0, 255, 255), (1, 255, 255))
+    # Morphological operations to separate close objects
+    kernel = np.ones((12, 12), np.uint8)
+    img_threshold = cv2.erode(img_threshold, kernel, iterations=1)  # Removes small connections
+
+    dist_transform = cv2.distanceTransform(img_threshold, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+    _, img_threshold = cv2.threshold(dist_transform, dist_transform.max()*0.2, 255, 0)
+    # dist_transform = cv2.normalize(dist_transform, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    # image = cv2.cvtColor(img_threshold, cv2.COLOR_GRAY2BGR)
+    # Find contours
+    img_threshold = img_threshold.astype(np.uint8)
+    contours, res = cv2.findContours(img_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    myContour = []
+    llpython = [0, 0, 0, 0, 0]
+
+    if contours:
+        screenCenter = np.array([640/2, 480/2])
+        centers = np.array([np.array(cv2.minAreaRect(contour)[0] - screenCenter) for contour in contours])
+        distFromCenter = np.linalg.norm(centers, axis=1)
+
+        i = np.argmin(distFromCenter)
+        myContour = contours[i]
+        myCenter = centers[i]
+        # selected = [contour for contour in contours if (640*3/4 > cv2.minAreaRect(contour)[0][0] > 640/4)]
+        # if not selected:
+        #     return [], image, llpython
+        # Find the largest contour
+        # myContour = max(selected, key=cv2.contourArea)
+
+        # Get the rotated rectangle
+        rect = cv2.minAreaRect(myContour)
+        box = cv2.boxPoints(rect)  # Get 4 corner points
+        box = np.int0(box)  # Convert to integer
+
+        contourArea = cv2.contourArea(myContour)
+        boxArea = cv2.contourArea(box)
+        fullness = contourArea / boxArea if boxArea > 0 else 0
+
+        # Extract useful values
+        (x, y), (w, h), angle = rect  # Center (x, y), (width, height), rotation angle
+        center = (int(x), int(y))
+
+        angle = angle if w < h else angle - 90
+
+        # draw the principal axis (longer side direction)
+        axis_length = int(max(w,h) / 2)
+        principal_axis_end = (int(x + axis_length * np.cos(np.radians(angle + 90))),
+                                int(y + axis_length * np.sin(np.radians(angle + 90))))
+
+        # Create a colored mask (for visualization)
+        mask_colored = cv2.cvtColor(img_threshold, cv2.COLOR_GRAY2BGR)  # Convert grayscale mask to BGR
+
+        # Blend mask with the original image (Alpha Blending)
+        image = cv2.addWeighted(image, 1, mask_colored, 0.5, 0)
+
+        # Draw decorations (corners & principal axis)
+        drawDecorations(image, angle, box, center, principal_axis_end)
+        # cv2.drawContours(image, contours, 0, (0, 0, 200), 2)  # Draw rotated rectangle (Yellow)
+        # cv2.drawContours(image, [myContour], 0, (0, 0, 0), 2)  # Draw rotated rectangle (Yellow)
+        cv2.drawContours(image, [box], 0, (255, 0, 0), 2)
+
+
+        # num_labels, labels = cv2.connectedComponents(img_threshold)
+        # for i in range(1, num_labels):  # Skip background (label 0)
+        #     mask = np.uint8(labels == i) * 255  # Create mask for each component
+        #     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        #     for contour in contours:
+        #         x, y, w, h = cv2.boundingRect(contour)
+        #         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Store values for external use
+        x = int(x) - 640//2
+        y = int(y) - 480//2
+        llpython = [x, y, int(w), int(h), int(angle)]
+        cv2.putText(image, f'x,y: {x}, {y}', (10, 260), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2, cv2.LINE_AA)
+
+    # myContour
+    # Return values
+    return [], image, llpython
+
+    Exposure: 3300
+    Black level offset: 0
+    Sensor Gain: 4.9
+    Red Balance 2500
+    Blue Balance 500
